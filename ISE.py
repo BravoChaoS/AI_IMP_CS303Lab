@@ -1,12 +1,10 @@
 import argparse
 import sys
-from time import time
-
 from models.lt import lt
 from models.ic import ic
 from models.read import get_graph, get_seed
 
-N = 0
+N = 10000
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -29,16 +27,12 @@ if __name__ == '__main__':
 
     ans = 0
 
-    t0 = time()
-    tl = int(args.time_limit)
     if args.model == 'IC':
-        while time() - t0 + 2 < tl:
+        for i in range(N):
             ans += ic(network_graph, initial_activated)
-            N += 1
     else:
-        while time() - t0 + 2 < tl:
+        for i in range(N):
             ans += lt(n, network_graph, inverse_network_graph, initial_activated)
-            N += 1
 
     print(ans / N)
     sys.stdout.flush()

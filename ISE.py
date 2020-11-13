@@ -1,36 +1,12 @@
 import argparse
 import sys
+from time import time
+
 from models.lt import lt
 from models.ic import ic
+from models.read import get_graph, get_seed
 
-N = 1000
-
-
-def get_graph(file_name):
-    with open(file_name, 'r') as f:
-        lines = f.readlines()
-
-    n, m = map(int, lines[0].split())
-    g = {}
-    ig = {}
-    # print(len(lines))
-
-    for line in lines[1:m]:
-        par = line.split()
-        u, v, w = int(par[0]), int(par[1]), float(par[2])
-
-        g[u] = g.get(u, []) + [(v, w)]
-        ig[v] = ig.get(v, []) + [(u, w)]
-
-    return g, ig
-
-
-def get_seed(file_name):
-    with open(file_name, 'r') as f:
-        lines = f.readlines()
-
-    return list(map(int, lines))
-
+N = 0
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -43,7 +19,7 @@ if __name__ == '__main__':
 
     # print(args.file_name, args.seed, args.model, args.time_limit, sep='\n')
 
-    network_graph, inverse_network_graph = get_graph(args.file_name)
+    n, m, network_graph, inverse_network_graph = get_graph(args.file_name)
     initial_activated = get_seed(args.seed)
     # print(initial_activated)
 
@@ -53,12 +29,16 @@ if __name__ == '__main__':
 
     ans = 0
 
+    t0 = time()
+    tl = int(args.time_limit)
     if args.model == 'IC':
-        for i in range(N):
+        while time() - t0 + 2 < tl:
             ans += ic(network_graph, initial_activated)
+            N += 1
     else:
-        for i in range(N):
-            ans += lt(network_graph, inverse_network_graph, initial_activated)
+        while time() - t0 + 2 < tl:
+            ans += lt(n, network_graph, inverse_network_graph, initial_activated)
+            N += 1
 
     print(ans / N)
     sys.stdout.flush()

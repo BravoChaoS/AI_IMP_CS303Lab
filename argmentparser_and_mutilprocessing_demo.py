@@ -12,6 +12,7 @@ import numpy as np
 
 core = 8
 
+
 def sum_and_product(x, y):
     '''
     计算两个数的和与积
@@ -19,6 +20,7 @@ def sum_and_product(x, y):
     while True:
         x = x + y
     return x + y, x * y
+
 
 if __name__ == '__main__':
     '''
@@ -36,10 +38,9 @@ if __name__ == '__main__':
     seed = args.seed
     model = args.model
     time_limit = args.time_limit
-   
+
     print(file_name, seed, model, time_limit)
 
-    
     '''
     多进程示例
     '''
@@ -52,7 +53,7 @@ if __name__ == '__main__':
         result.append(pool.apply_async(sum_and_product, args=(np.random.randint(0, 10), np.random.randint(0, 10))))
     pool.close()
     pool.join()
-    
+
     '''
     程序结束后强制退出，跳过垃圾回收时间, 如果没有这个操作会额外需要几秒程序才能完全退出
     '''

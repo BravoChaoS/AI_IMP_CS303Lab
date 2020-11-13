@@ -1,6 +1,6 @@
 import argparse
 import sys
-from lt import lt
+from models.lt import lt
 from models.ic import ic
 
 N = 1000

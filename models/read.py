@@ -14,7 +14,8 @@ def get_graph(file_name):
         g[u] = g.get(u, []) + [(v, w)]
         ig[v] = ig.get(v, []) + [(u, w)]
 
-    return n, m, g, ig
+    # print(lines[m])
+    return g, ig, n
 
 
 def get_seed(file_name):

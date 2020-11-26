@@ -1,11 +1,10 @@
 from numpy import random
 
 
-def lt(n, graph, inv_graph, ini_activated):
+def lt(graph, inv_graph, ini_activated):
     activated = ini_activated.copy()
     visited = set(ini_activated.copy())
-
-    theta = random.randn(n)
+    theta = {}
 
     while activated:
         new_activated = []
@@ -15,10 +14,10 @@ def lt(n, graph, inv_graph, ini_activated):
                     continue
                 tot = 0
                 for ut, wt in inv_graph.get(v, []):
-                    if ut in visited:
+                    if ut in visited and ut not in new_activated:
                         tot += wt
-                if tot > theta[v]:
+                if tot > theta.setdefault(v, random.random()):
                     new_activated.append(v)
                     visited.add(v)
         activated = new_activated
-    return len(visited)
+    return visited

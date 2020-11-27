@@ -45,41 +45,56 @@ class IMM:
         return 2 * self.n * pow(((1 - 1 / math.e) * alpha + beta), 2) * pow(self.e, -2)
 
     def sampling(self):
-        ep = math.sqrt(2) * self.e
-
         rrs = []
-        rnd = int(math.log2(self.n - 1)) + 1
-        for i in range(1, rnd):
-            x = self.n / math.pow(2, i)
-            lp = ((2 + 2 * ep / 3) * (
-                    self.log_cnk + self.l * math.log(self.n) + math.log(math.log2(self.n))) * self.n) / pow(ep, 2)
-            theta = lp / x
+        # tlim = self.tl * 0.25
 
-            rrs += self.generate_rrs(theta - len(rrs))
-            seeds, f = self.node_selection(rrs)
+        random.seed(int(time.time()))
+        s1 = time.time()
+        while len(rrs) < 1000000:
+            v = random.randint(1, self.n)
+            if self.model == 'IC':
+                rrs.append(self.generate_rr_ic(v))
+            else:
+                rrs.append(self.generate_rr_lt(v))
 
-            if self.n * f >= (1 + ep) * x:
-                self.lb = self.n * f / (1 + ep)
-                break
+        print('sampling', time.time() - s1)
+        print('rrs_len', len(rrs))
 
-        ls = self.get_lambda_aster()
-        theta = ls / self.lb
-
-        if len(rrs) < theta:
-            rrs += self.generate_rrs(theta - len(rrs))
+        # ep = math.sqrt(2) * self.e
+        # rnd = int(math.log2(self.n - 1)) + 1
+        # for i in range(1, rnd):
+        #     x = self.n / math.pow(2, i)
+        #     lp = ((2 + 2 * ep / 3) * (
+        #             self.log_cnk + self.l * math.log(self.n) + math.log(math.log2(self.n))) * self.n) / pow(ep, 2)
+        #     theta = lp / x
+        #
+        #     rrs += self.generate_rrs(theta - len(rrs))
+        #     seeds, f = self.node_selection(rrs)
+        #
+        #     if self.n * f >= (1 + ep) * x:
+        #         self.lb = self.n * f / (1 + ep)
+        #         break
+        #
+        # ls = self.get_lambda_aster()
+        # theta = ls / self.lb
+        #
+        # if len(rrs) < theta:
+        #     rrs += self.generate_rrs(theta - len(rrs))
 
         return rrs
 
     def node_selection(self, rrs):
+        s2 = time.time()
         seeds = []
         node_rr = [set() for i in range(self.n + 1)]
-        seed_rr = set()
+        vis = [False for i in range(len(rrs))]
 
         for i in range(len(rrs)):
             rr = rrs[i]
             for u in rr:
                 node_rr[u].add(i)
 
+        cnt = 0
         while len(seeds) < self.k:
             opt = 0
             for i in range(1, len(node_rr)):
@@ -87,14 +102,21 @@ class IMM:
                     opt = i
 
             seeds.append(opt)
-            seed_rr = seed_rr | node_rr[opt]
-
             opt_set = node_rr[opt].copy()
+
+            for i in opt_set:
+                vis[i] = True
+
             for nrr in node_rr:
                 nrr.difference_update(opt_set)
 
+            for i in range(len(rrs)):
+                if vis[i]:
+                    cnt += 1
+
         # print(len(rrs), len(seed_rr) / len(rrs))
-        return seeds, len(seed_rr) / len(rrs)
+        print('node_selection', time.time() - s2)
+        return seeds, cnt / len(rrs)
 
     def generate_rrs(self, theta):
         rrs = []

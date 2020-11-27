@@ -87,14 +87,13 @@ class IMM:
         s2 = time.time()
         seeds = []
         node_rr = [set() for i in range(self.n + 1)]
-        vis = [False for i in range(len(rrs))]
+        seed_rr = set()
 
         for i in range(len(rrs)):
             rr = rrs[i]
             for u in rr:
                 node_rr[u].add(i)
 
-        cnt = 0
         while len(seeds) < self.k:
             opt = 0
             for i in range(1, len(node_rr)):
@@ -102,21 +101,15 @@ class IMM:
                     opt = i
 
             seeds.append(opt)
+            seed_rr = seed_rr | node_rr[opt]
+
             opt_set = node_rr[opt].copy()
-
-            for i in opt_set:
-                vis[i] = True
-
             for nrr in node_rr:
                 nrr.difference_update(opt_set)
 
-            for i in range(len(rrs)):
-                if vis[i]:
-                    cnt += 1
-
         # print(len(rrs), len(seed_rr) / len(rrs))
         print('node_selection', time.time() - s2)
-        return seeds, cnt / len(rrs)
+        return seeds, len(seed_rr) / len(rrs)
 
     def generate_rrs(self, theta):
         rrs = []

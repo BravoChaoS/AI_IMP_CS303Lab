@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     g, ig, n = get_graph(args.file_name)
     imm = IMM()
-    e = 0.3
+    e = 0.25
     l = 1
     seeds = imm.run(args.model, g, ig, e, l, n, args.seed_number, args.time_limit)
     for u in seeds:

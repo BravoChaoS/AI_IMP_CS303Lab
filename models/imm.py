@@ -36,6 +36,7 @@ class IMM:
             self.log_cnk -= math.log(i)
 
         rrs = self.sampling()
+        # print(len(rrs))
         seeds, size = self.node_selection(rrs)
         return seeds
 
@@ -46,19 +47,19 @@ class IMM:
 
     def sampling(self):
         rrs = []
-        # tlim = self.tl * 0.25
+        tlim = self.tl * 0.8
 
         random.seed(int(time.time()))
         s1 = time.time()
-        while len(rrs) < 1000000:
+        while time.time() - s1 < tlim and len(rrs) < 5000000:
             v = random.randint(1, self.n)
             if self.model == 'IC':
                 rrs.append(self.generate_rr_ic(v))
             else:
                 rrs.append(self.generate_rr_lt(v))
 
-        print('sampling', time.time() - s1)
-        print('rrs_len', len(rrs))
+        # print('sampling', time.time() - s1)
+        # print('rrs_len', len(rrs))
 
         # ep = math.sqrt(2) * self.e
         # rnd = int(math.log2(self.n - 1)) + 1
@@ -86,44 +87,34 @@ class IMM:
     def node_selection(self, rrs):
         s2 = time.time()
         seeds = []
-        node_rr = [set() for i in range(self.n + 1)]
-        seed_rr = set()
+        node_rr = [[] for i in range(self.n + 1)]
+        node_rr_len = [0 for i in range(self.n + 1)]
+        vis_rr = [True for i in range(len(rrs))]
+
+        node_rr_len[0] = -1
+        for i in range(len(rrs)):
+            for nd in rrs[i]:
+                node_rr_len[nd] += 1
+                node_rr[nd].append(i)
+
+        for i in range(self.k):
+            opt = node_rr_len.index(max(node_rr_len))
+            seeds.append(opt)
+            for j in node_rr[opt]:
+                if vis_rr[j]:
+                    vis_rr[j] = False
+                    for nd in rrs[j]:
+                        node_rr_len[nd] -= 1
+
+        cnt = 0
 
         for i in range(len(rrs)):
-            rr = rrs[i]
-            for u in rr:
-                node_rr[u].add(i)
-
-        while len(seeds) < self.k:
-            opt = 0
-            for i in range(1, len(node_rr)):
-                if len(node_rr[i]) > len(node_rr[opt]):
-                    opt = i
-
-            seeds.append(opt)
-            seed_rr = seed_rr | node_rr[opt]
-
-            opt_set = node_rr[opt].copy()
-            for nrr in node_rr:
-                nrr.difference_update(opt_set)
+            if not vis_rr[i]:
+                cnt += 1
 
         # print(len(rrs), len(seed_rr) / len(rrs))
-        print('node_selection', time.time() - s2)
-        return seeds, len(seed_rr) / len(rrs)
-
-    def generate_rrs(self, theta):
-        rrs = []
-        theta = int(theta)
-        random.seed(int(time.time()))
-        if self.model == 'IC':
-            for j in range(theta):
-                v = random.randint(1, self.n)
-                rrs.append(self.generate_rr_ic(v))
-        else:
-            for j in range(theta):
-                v = random.randint(1, self.n)
-                rrs.append(self.generate_rr_lt(v))
-        return rrs
+        # print('node_selection', time.time() - s2)
+        return seeds, cnt / len(rrs)
 
     def generate_rr_ic(self, v):
         activated = [v]
@@ -143,22 +134,16 @@ class IMM:
         return visited
 
     def generate_rr_lt(self, v):
-        activated = [v]
+        activated = v
         visited = {v}
-        theta = {}
 
         while activated:
-            new_activated = []
-            for u in activated:
-                for v, w in self.ig.get(u, []):
-                    if v in visited:
-                        continue
-                    tot = 0
-                    for ut, wt in self.g.get(v, []):
-                        if ut in visited and ut not in new_activated:
-                            tot += wt
-                    if tot > theta.setdefault(v, random.random()):
-                        new_activated.append(v)
-                        visited.add(v)
+            adj = self.ig.get(activated, [])
+            if len(adj) == 0:
+                break
+            new_activated = adj[random.randint(0, len(adj))][0]
+            if new_activated in visited:
+                break
+            visited.add(new_activated)
             activated = new_activated
         return visited

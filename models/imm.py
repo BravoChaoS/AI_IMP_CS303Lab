@@ -16,6 +16,8 @@ class IMM:
         self.k = 0
         self.log_cnk = 0
         self.tl = 60
+        self.ts = 0
+        self.te = 0
 
     def run(self, model: str, g: dict, ig: dict, e: float, l: int, n: int, k: int, tl: int):
         self.model = model
@@ -27,6 +29,7 @@ class IMM:
         self.k = k
         self.log_cnk = 0
         self.tl = tl
+        self.ts = time.time()
         for i in range(n - k + 1, n + 1):
             self.log_cnk += math.log(i)
         for i in range(1, k + 1):
@@ -46,10 +49,8 @@ class IMM:
 
         rrs = []
         rnd = int(math.log2(self.n - 1)) + 1
-        # print(self.n)
         for i in range(1, rnd):
             x = self.n / math.pow(2, i)
-            # print('x: ', x, self.n, i)
             lp = ((2 + 2 * ep / 3) * (
                     self.log_cnk + self.l * math.log(self.n) + math.log(math.log2(self.n))) * self.n) / pow(ep, 2)
             theta = lp / x
@@ -57,10 +58,8 @@ class IMM:
             rrs += self.generate_rrs(theta - len(rrs))
             seeds, f = self.node_selection(rrs)
 
-            # print('ep: ', (1 + ep) * x)
             if self.n * f >= (1 + ep) * x:
                 self.lb = self.n * f / (1 + ep)
-                # print('break', f)
                 break
 
         ls = self.get_lambda_aster()
@@ -90,8 +89,9 @@ class IMM:
             seeds.append(opt)
             seed_rr = seed_rr | node_rr[opt]
 
+            opt_set = node_rr[opt].copy()
             for nrr in node_rr:
-                nrr.difference_update(node_rr[opt])
+                nrr.difference_update(opt_set)
 
         # print(len(rrs), len(seed_rr) / len(rrs))
         return seeds, len(seed_rr) / len(rrs)

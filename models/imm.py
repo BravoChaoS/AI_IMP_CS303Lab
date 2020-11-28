@@ -34,11 +34,12 @@ class IMM:
         return seeds
 
     def sampling(self):
+        # s1 = time.time()
         rrs = []
-        tlim = self.tl * 0.8
+        tlim = self.tl * 0.75
 
         s1 = time.time()
-        while time.time() - s1 < tlim and len(rrs) < 5000000:
+        while time.time() - s1 < tlim and len(rrs) < 10000000:
             v = random.randint(1, self.n)
             if self.model == 'IC':
                 rrs.append(self.generate_rr_ic(v))
@@ -50,6 +51,7 @@ class IMM:
         return rrs
 
     def node_selection(self, rrs):
+        # s2 = time.time()
         seeds = []
         node_rr = [[] for i in range(self.n + 1)]
         node_rr_len = [0 for i in range(self.n + 1)]
@@ -74,7 +76,7 @@ class IMM:
 
     def generate_rr_ic(self, v):
         activated = [v]
-        visited = {v}
+        visited = [v]
 
         while len(activated) > 0:
             new_activated = []
@@ -85,19 +87,21 @@ class IMM:
                     rd = random.uniform()
                     if rd < w:
                         new_activated.append(v)
-                        visited.add(v)
+                        visited.append(v)
             activated = new_activated
         return visited
 
     def generate_rr_lt(self, v):
         activated = v
-        visited = {v}
+        visited = [v]
 
         while activated:
             adj = self.ig.get(activated, [])
             if len(adj) == 0:
                 break
             new_activated = adj[random.randint(0, len(adj))][0]
-            visited.add(new_activated)
+            if new_activated in visited:
+                break
+            visited.append(new_activated)
             activated = new_activated
         return visited
